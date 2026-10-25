@@ -86,3 +86,15 @@ Candidates: TIME 1, TIME 2, FB 1, FB 2, TWIST, MIX (6 knobs) + RATE, DEPTH + SER
 3. **Clock whistle test:** both TIMEs equal, sweep one slowly; listen for a beating tone at low MIX and with FB at zero. If it's there: more decoupling at each pin 1, chip spacing, separate ground returns.
 4. **SERIES:** echoes of echoes; check levels.
 5. **LFO on line 2:** RATE / DEPTH trims for a light chorus, then decide whether DEPTH deserves a knob.
+
+## Parts at JLC / LCSC (checked 2026-10-25)
+
+| Part | LCSC | Type | Stock | Price | Note |
+|---|---|---|---|---|---|
+| **PT2399-SN** (Princeton, genuine) | **C126407** | extended | 4056 | $1.20 | SOP-16 narrow. First choice for v1 |
+| PT2399-S(LX) (clone) | C26159242 | extended | 3686 | $0.26 | SOP-16. Cheaper; clones vary, compare on a later run |
+| PT2399S | C85146 | extended | 184 | $1.01 | **SOP-16 300 mil (wide body)**: different footprint, avoid |
+| PT2399 DIP-16 | C84963 | | 794 | $0.94 | For the breadboard |
+| **AMS1117-5.0** | **C6187** | **basic** | 148k | $0.26 | SOT-223. Basic, so no fee; 1.3 V dropout is fine from 9 V. Replaces the 78L05 (L78L05ABUTR C42738 is extended) |
+
+Dual-gang 16 mm B10k (TWIST): not in the LCSC library; buy with the other panel pots (Alpha, Tayda / Small Bear), hand-soldered.
