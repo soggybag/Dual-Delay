@@ -135,3 +135,7 @@ Full notes and sources: `../../Stompboxology Ideas.md` (index + deep dives). Ide
 
 - **Ducking:** Envelo-Matic III inverted: the guitar's envelope turns the repeats down while playing, they swell back in the gaps (an LED / LDR or OTA on the wet sum, driven by an envelope detector on DRY).
 - **Stereo swap per note** (Attack-O-Matic V) / pan with invert (Pan Tremolo-Matic) for the stereo-out version.
+
+## v0.2 (2026-10-25)
+
+Applied the Dragonfish items: TIME minimum 2k7 on both lines, LFO into TMIN_2 via 33k + 10µ (even depth across TIME), U6 → LM358. Voicing pair left as a breadboard experiment. Bring-up order and tests: `Breadboard Plan.md`.

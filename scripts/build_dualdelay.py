@@ -3,13 +3,14 @@ between itself (parallel) and the other line (Moebius cross-feedback, idea from 
 Blocks reused from Loop Echo (PT2399 network from the user's Small Time, diode limiter, LFO, mixer).
   - U3A input buffer (DRY); U3B inverting output mixer (DRY + MIXW)
   - U1 / U2 PT2399 lines, each on its own 78L05 (U7 / U8) to limit clock beating between the chips.
-    TIME = 1k + B50k from VCO (pin 6) to ground (~40-580 ms)
+    TIME = B50k + 2k7 from VCO (pin 6) to ground (~50-600 ms); node TMIN between them takes the LFO (v0.2)
   - FEEDBACK: W1 / W2 -> FB pot -> 1k + 1N4148 limiter -> U4 followers -> FB1B / FB2B
   - TWIST (dual-gang B10k): gang A FB1B (CCW) .. FB2B (CW) -> RPT1; gang B FB2B (CCW) .. FB1B (CW) -> RPT2
     CCW = parallel, CW = Moebius, middle = both
   - SERIES (SW1): line 2's input = DRY (parallel) or W1 (series)
   - U5A wet summer (W1 + W2) -> MIX; U5B spare (future stereo R)
-  - U6 LFO (Schmitt + integrator, RATE / DEPTH trims) -> line 2 VCO only
+  - U6 LFO (LM358: Schmitt + integrator, RATE / DEPTH trims) -> 33k + 10u -> TMIN_2 (line 2 only). Injecting at the
+    TIME / 2k7 node (Dragonfish) keeps the modulation depth even across TIME: dI/I = -I_lfo x 2k7 / 2.8 V
 Breadboard-first: no footprints yet.
 usage: build_dualdelay.py <out.kicad_sch>"""
 from sch import *
@@ -44,8 +45,8 @@ def lab_at(p, name, dx=2, side='r'):
 def lab_v(p, name, dy, side='r'):
     q = (p[0], p[1] + g(dy)); W(p, q); lab(name, q, side)
 PINS = {1: ('3', '2', '1'), 2: ('5', '6', '7')}
-def OP(ref, unit, x, ytop):
-    s.part(ref, 'Amplifier_Operational', 'TL072', 'TL072', x, ytop + 2.54, 0, unit=unit, text='ic')
+def OP(ref, unit, x, ytop, sym='TL072'):
+    s.part(ref, 'Amplifier_Operational', sym, sym, x, ytop + 2.54, 0, unit=unit, text='ic')
     pl, mi, ou = PINS[unit]
     return P(ref, pl), P(ref, mi), P(ref, ou)
 def follower(ref, unit, x, ytop):
@@ -93,8 +94,8 @@ W(P(r1, '2'), P(r2, '1'))
 c = CPv('47u', g(15), g(63.5), d='VB filter')
 W((g(9), g(60)), (g(15), g(60)), P(c, '1')); GND(P(c, '2'))
 W((g(15), g(60)), (g(19), g(60))); lab('VB', (g(19), g(60))); s.power('PWR_FLAG', (g(19), g(60)))
-for ref, x in (('U3', 25), ('U4', 30), ('U5', 35), ('U6', 40)):
-    s.part(ref, 'Amplifier_Operational', 'TL072', 'TL072', g(x), g(68), 0, unit=3, text='ic'); V9(P(ref, '8')); GND(P(ref, '4'))
+for ref, x, sym in (('U3', 25, 'TL072'), ('U4', 30, 'TL072'), ('U5', 35, 'TL072'), ('U6', 40, 'LM358')):
+    s.part(ref, 'Amplifier_Operational', sym, sym, g(x), g(68), 0, unit=3, text='ic'); V9(P(ref, '8')); GND(P(ref, '4'))
 s.part('J1', 'Connector_Generic', 'Conn_01x02', '9V / GND', g(8), g(74), 180, text=((g(6), g(71)), (g(6), g(72.5)), 'right'))
 q = P('J1', '1'); W(q, (q[0] + g(3), q[1])); lab('9V_IN', (q[0] + g(3), q[1]))
 q = P('J1', '2'); W(q, (q[0] + g(3), q[1])); GND((q[0] + g(3), q[1])); s.power('PWR_FLAG', (q[0] + g(3), q[1]))
@@ -140,7 +141,7 @@ W((q[0] + g(3), q[1]), (q[0] + g(6), q[1])); lab('OUT', (q[0] + g(6), q[1]))
 def line(n, dy, dry_net):
     Y = lambda v: g(v) + dy
     k = f'_{n}'
-    s.box(f'DELAY LINE {n}: PT2399 (U{n}), network as Loop Echo / Small Time. TIME {n} = 1k + B50k',
+    s.box(f'DELAY LINE {n}: PT2399 (U{n}), network as Loop Echo / Small Time. TIME {n} = B50k + 2k7',
           g(124), Y(6), g(250), Y(80))
     U = f'U{n}'
     xu, yu = g(150), Y(40)
@@ -194,7 +195,8 @@ def line(n, dy, dry_net):
     lab(f'VCO{k}', (g(134), Y(62)), 'l'); W((g(134), Y(62)), (g(138), Y(62)))
     rv = pot('B50k', f'TIME {n}', g(138), Y(62) + 3.81, mirror=None, text=((g(134), Y(66)), (g(134), Y(67.5)), 'right'))
     q = rheo(rv)
-    r = Rv('1k', q[0], q[1] + 3.81 + g(1), side='r', d='Minimum delay'); W(q, P(r, '1')); GND(P(r, '2'))
+    r = Rv('2k7', q[0], q[1] + 3.81 + g(1), side='r', d='Minimum delay (~50 ms); also sets the LFO injection gain'); W(q, P(r, '1')); GND(P(r, '2'))
+    lab_at(q, f'TMIN{k}', 3, 'l')
 
 line(1, 0, 'DRY')
 line(2, g(78), 'D2IN')
@@ -262,7 +264,7 @@ W(pl, (pl[0] - g(4), pl[1])); lab('VB', (pl[0] - g(4), pl[1]), 'l')
 # ================================================================ LFO (U6) -> line 2 VCO
 s.box('MODULATION: LFO (U6) -> DEPTH trim -> line 2 VCO only. RATE / DEPTH are internal trims', g(4), g(82), g(120), g(158))
 yl = g(98)
-pl, mi, ou = OP('U6', 1, g(40), yl)
+pl, mi, ou = OP('U6', 1, g(40), yl, 'LM358')
 W(pl, (pl[0] - g(6), pl[1])); lab('VB', (pl[0] - g(6), pl[1]), 'l')
 r27 = Rh('47k', mi[0] - 6.35, mi[1], d='Max rate'); W(P(r27, '2'), mi)
 q = P(r27, '1')
@@ -274,7 +276,7 @@ fy = mi[1] + g(4); rx = ou[0] + g(1)
 W(P(r27, '2'), (P(r27, '2')[0], fy))
 c = Ch('1u', (P(r27, '2')[0] + rx) / 2, fy, d='LFO timing (film)'); W((P(r27, '2')[0], fy), P(c, '1')); W(P(c, '2'), (rx, fy))
 W(ou, (rx, ou[1])); W((rx, ou[1]), (rx, fy)); W((rx, ou[1]), (rx + g(4), ou[1])); lab('TRI', (rx + g(4), ou[1]))
-pl, mi, ou = OP('U6', 2, g(80), yl)
+pl, mi, ou = OP('U6', 2, g(80), yl, 'LM358')
 W(mi, (mi[0] - g(6), mi[1])); lab('VB', (mi[0] - g(6), mi[1]), 'l')
 ra = Rh('10k', pl[0] - 6.35, pl[1], d='Schmitt input')
 W(P(ra, '2'), pl); q = P(ra, '1'); W(q, (q[0] - g(2), q[1])); lab('TRI', (q[0] - g(2), q[1]), 'l')
@@ -289,15 +291,16 @@ W(P(c, '2'), (g(24), ym))
 rv = pot('100k', 'DEPTH (trim)', g(24), ym + 3.81, sym='R_Potentiometer_Trim', text=((g(20), ym + g(3)), (g(20), ym + g(4.5)), 'right'))
 GND(P(rv, '1'))
 w = P(rv, '2')
-r = Rh('100k', w[0] + g(1) + 3.81, w[1], d='Sets the maximum modulation (tune on the breadboard)'); W(w, P(r, '1'))
-c = Ch('1u', P(r, '2')[0] + g(1) + 3.81, w[1], d='Keeps the LFO from shifting the delay time'); W(P(r, '2'), P(c, '1'))
-lab_at(P(c, '2'), 'VCO_2', 3)
-s.text('~0.5-12 Hz. Set RATE slow and DEPTH low for a chorus-like spread between the lines.', g(6), g(150))
+r = Rh('33k', w[0] + g(1) + 3.81, w[1], d='LFO injection: about +-4 % delay change at full DEPTH (tune on the breadboard)'); W(w, P(r, '1'))
+c = nx('C'); s.part(c, 'Device', 'C_Polarized', '10u', P(r, '2')[0] + g(1) + 3.81, w[1], 270, desc='Coupling (+ toward TMIN_2, which sits 0.1-2.8 V above the wiper)', text='t')
+W(P(r, '2'), P(c, '2'))
+lab_at(P(c, '1'), 'TMIN_2', 3)
+s.text('~0.5-12 Hz. Injected at the TIME 2 / 2k7 node: the same DEPTH gives the same percentage wobble at any TIME setting.', g(6), g(150))
 
 # ================================================================ PANEL note
 s.text('Panel (1590BB): TIME 1, TIME 2, FB 1, FB 2, TWIST, MIX + SERIES toggle. Internal: RATE, DEPTH.', g(4), g(166), 2, True)
 
-s.write(OUT, title_block={'title': 'Dual Delay (breadboard)', 'rev': '0.1', 'company': 'Super-Freq',
+s.write(OUT, title_block={'title': 'Dual Delay (breadboard)', 'rev': '0.2', 'company': 'Super-Freq',
                          'comments': ['Two PT2399 lines, TWIST blends self / cross feedback (parallel .. Moebius), SERIES toggle',
                                       'Blocks from Loop Echo (PT2399 network from Small Time); LFO on line 2']})
 print('written', OUT)
