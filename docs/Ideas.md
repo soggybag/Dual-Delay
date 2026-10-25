@@ -1,0 +1,88 @@
+# Dual Delay: ideas and v0.1 plan (2026-10-25)
+
+## Where the idea came from
+
+The **VFE Möbius Strip** (madbean doc `~/Documents/Guitar/Effects/Schematics/VFE_MobiusStrip.pdf`, schematic p.9): two PT2399 lines, TIME 40–580 ms each, FB1 / FB2, MIX, and a **MODE** DPDT:
+- **Parallel:** each line feeds back into itself (two independent echoes).
+- **Möbius:** line 1's feedback goes into line 2 and line 2's into line 1. The loop time becomes t1 + t2, so repeats fall at **t1, t2, t1 + t2**, then repeat: 3-step rhythms. Tip from VFE: set one TIME short, the other long, then raise the short one until a rhythm locks in.
+
+Worth copying as **practice**, not circuit (VFE boards are DIY-only; we design our own):
+- a separate 5 V regulator for the PT2399s, big caps on pins 1–2;
+- double filtering around each chip (input and output), plus an extra low-pass on each wet output;
+- the dry path never touches a PT2399;
+- MIX as gain on the wet sum (0 to unity).
+
+## Our twist: a TWIST knob instead of the MODE switch
+
+One **dual-gang B pot** blends each line's feedback between "self" and "cross":
+- Gang A: ends at **FB1** and **FB2**, wiper → line 1's feedback input.
+- Gang B: reversed (ends at FB2 and FB1), wiper → line 2's feedback input.
+- **Fully CCW = parallel** (each line hears itself), **fully CW = Möbius** (each hears the other), **in between = both**: denser, more diffuse patterns. A smooth sweep from echo to rhythm to wash.
+- FB1 / FB2 (the FEEDBACK pots) need **buffering** (one op-amp half each) so the TWIST pot doesn't load them.
+- Loop gain can add up with both paths open: keep Loop Echo's **diode limiter** in each feedback path so self-oscillation stays musical.
+
+## v0.1 plan (blocks)
+
+| Block | From | Notes |
+|---|---|---|
+| Input buffer → DRY | Loop Echo U2A | |
+| 2 × PT2399 line | Loop Echo / Small Time network | TIME = B50k + 1k (~30–340 ms in Loop Echo). Longer = noisier; a B100k gives more time if the noise is OK |
+| FB1 / FB2 level pots + buffers | new | |
+| TWIST (dual-gang) | new | see above |
+| Limiter in each feedback | Loop Echo (1N4148 pair after 1k) | |
+| SERIES option (toggle) | new | line 2's input from line 1's output instead of DRY: a third structure, combines with TWIST |
+| Modulation | Loop Echo LFO (Schmitt + integrator, AC-coupled into pin 6) | On **line 2 only**: one line steady, one wobbling = chorus-like spread |
+| Mixer | Loop Echo U2B | DRY + W1 + W2, MIX |
+| Power | 78L05 for the PT2399s | One per chip if crosstalk is a problem (see below) |
+
+**Stereo (later):** OUT L = dry + line 1, OUT R = dry + line 2. TRS out or a second jack.
+
+## Known dual-PT2399 problem: clock whistle
+
+Each PT2399 runs a VCO clock (MHz, set by TIME). With two chips, the clocks can **beat against each other** and leak a whistle or tone that slides as TIME moves, worst when the two TIMEs are close. Mitigations:
+- separate 5 V regulators (or at least an RC filter per chip) and good local decoupling on each chip;
+- solid ground plane, chips apart, analog and clock returns kept separate;
+- the double filtering on every output.
+Test this early on the breadboard: set both TIMEs equal and sweep one slowly.
+
+## Panel (decided 2026-10-25: option A)
+
+**TIME 1, TIME 2, FB 1, FB 2, TWIST, MIX + SERIES toggle in a 1590BB.** RATE / DEPTH are internal trims (a fixed light chorus on line 2).
+
+Options that were considered:
+
+Candidates: TIME 1, TIME 2, FB 1, FB 2, TWIST, MIX (6 knobs) + RATE, DEPTH + SERIES toggle.
+- **6 knobs + toggle:** 1590BB (like Casualty), with RATE / DEPTH as internal trims or a fixed light chorus.
+- **8 knobs:** 1590BB tight, or 9 mm pots.
+- Simplify: one FEEDBACK (dual-gang) for both lines → 5 knobs + modulation → 125B possible.
+
+## To do
+
+1. Decide the panel and the enclosure.
+2. Check PT2399 (SOP-16) and a dual-gang 16 mm B pot: JLC stock / price; PT2399 is probably an extended part.
+3. v0.1 breadboard schematic (generator, reusing `../Loop Echo/scripts/`).
+4. Breadboard: one line first (the Loop Echo breadboard proves it), then the second line, TWIST, clock-whistle test.
+
+## v0.1 schematic (2026-10-25)
+
+`DualDelay.kicad_sch` (generator `scripts/build_dualdelay.py`, toolkit copied from Loop Echo). ERC 0, nets checked.
+
+| Block | Parts | Notes |
+|---|---|---|
+| Power | D1 1N5817, C1 100µ, VB R1/R2 10k + 47µ; **U7 / U8 78L05, one per PT2399** (V5_1, V5_2) | Separate 5 V to reduce clock beating |
+| Input / output | U3A follower → DRY; U3B inverting mixer (DRY + MIXW, 10k / 10k / 10k ∥ 1n) | As Loop Echo |
+| Lines 1 / 2 | U1 / U2 PT2399, Small Time network; DIN = input (DRY or D2IN) + RPT via 100n + 10k each; wet = LP2O → 10µ → 1k → W1 / W2 | TIME n = B50k + 1k (pin 6 to GND): ~40–580 ms (VFE quotes this range for the same values; past ~340 ms gets noisier and darker) |
+| Feedback | W n → FB n (B10k) → 1k + 1N4148 pair → 1µ → U4 follower → FB1B / FB2B | Limiter only in the loop: the first echo is clean |
+| TWIST | RV5 dual-gang B10k: gang A pin 1 FB1B / pin 3 FB2B → RPT_1; gang B pin 4 FB2B / pin 6 FB1B → RPT_2 | CCW parallel, CW Möbius. Both FBs equal: same loop gain at every TWIST position |
+| SERIES | SW1 SPDT: D2IN = DRY or W1 | |
+| Wet sum + MIX | U5A: W1 + W2 (1µ + 10k each, 10k ∥ 220p) → 10µ → 1k → 47n top-cut → MIX B10k → MIXW | Raise the 10k feedback for more wet ("more gain on tap") |
+| LFO | U6 (Schmitt + integrator), RATE trim 1M + 47k, DEPTH trim 100k → 100k + 1µ → VCO_2 | Line 2 only |
+| Spare | U5B (follower, + to VB) | Future stereo R output |
+
+## Breadboard order
+
+1. **Line 1 alone** (power, U3, U1, FB 1, U4A, mixer with W1 only): TIME range, FB to self-oscillation (the limiter should keep it musical), noise. The Loop Echo breadboard proves the same block.
+2. **Add line 2 + TWIST:** parallel at CCW, Möbius at CW (set TIME 1 short, TIME 2 long: listen for the t1, t2, t1+t2 rhythm), the middle.
+3. **Clock whistle test:** both TIMEs equal, sweep one slowly; listen for a beating tone at low MIX and with FB at zero. If it's there: more decoupling at each pin 1, chip spacing, separate ground returns.
+4. **SERIES:** echoes of echoes; check levels.
+5. **LFO on line 2:** RATE / DEPTH trims for a light chorus, then decide whether DEPTH deserves a knob.
