@@ -98,3 +98,32 @@ Candidates: TIME 1, TIME 2, FB 1, FB 2, TWIST, MIX (6 knobs) + RATE, DEPTH + SER
 | **AMS1117-5.0** | **C6187** | **basic** | 148k | $0.26 | SOT-223. Basic, so no fee; 1.3 V dropout is fine from 9 V. Replaces the 78L05 (L78L05ABUTR C42738 is extended) |
 
 Dual-gang 16 mm B10k (TWIST): not in the LCSC library; buy with the other panel pots (Alpha, Tayda / Small Bear), hand-soldered.
+
+## Ideas from the Dragonfish (2026-10-25)
+
+Source: madbean **Dragonfish** (`~/Documents/Guitar/Effects/Schematics/Dragonfish.pdf`, schematic p.13; close to the Tonepad Rebote 2.5 plus LFO). Ideas only.
+
+### 1. LFO injection point: even modulation depth across TIME (adopt)
+
+The PT2399 holds pin 6 (VCO) at about **2.8 V**; the clock follows the current drawn out of it, I = 2.8 V / (R_TIME + R_min).
+- **Current way (ours):** LFO current straight into **pin 6**. Its share of I is tiny at short delays and large at long ones (with ±15 µA: about ±2 % at 3.7k total, ±27 % at 51k). Depth swings wildly as TIME turns.
+- **Dragonfish way:** inject into the node **between the TIME pot and the fixed minimum resistor** (TIME → node → R_min → GND), through **33k + 10 µ**. Solving the node: ΔI / I = −I_lfo · R_min / 2.8 V, **independent of TIME**. Even depth across the range (pitch wobble still grows a little with delay time, but far less).
+- **Change:** R_min 1k → **2k7** (also sets the shortest delay, ~50 ms) and LFO → DEPTH → **33k + 10 µ** → the TIME / R_min node (instead of 100k + 1 µ → pin 6). Re-trim DEPTH range on the breadboard (R_min sets the injection gain).
+
+### 2. Darker, "analog-voiced" repeats (option)
+
+Dragonfish adds RC poles **before** the chip (IC1A → 1 µ → **10k / 22n → 10k / 10n** → the PT2399 LPF1 with 10k, 33k, 1n) and uses **15n** caps in LPF2 (vs 10n / 2n2), then **1k5 + 22n** before MIX / RPT. Repeats are darker and get darker each pass, and more clock noise is filtered.
+
+### 3. Low-power op-amp for the LFO
+
+TL022 / TL062-class: much less (and less varying) supply current than a TL072, so less LFO tick on the supply. Check JLC basic status (LM358 C7950 is a known option).
+
+### Skip
+
+The **1N914 in the 78L05 ground leg** that runs the PT2399 at ~5.6–5.7 V for "headroom": above the 5.5 V datasheet maximum (madbean admits the early-failure risk). Keep the PT2399 at 5.0 V.
+
+**Dual Delay specifics:**
+- #1 applies to **line 2** (the modulated line): TIME 2's minimum resistor → 2k7, LFO into that node. If line 1 keeps 1k, the two TIME ranges differ slightly at the short end; simplest to make both 2k7.
+- #2 could be a **voicing pair**: line 1 bright (Small Time values), line 2 dark (Dragonfish values). With TWIST, crisp echoes against tape-like ones. The extra filtering also helps the two-chip **clock-whistle** risk.
+- #3: U6 (LFO) → TL062 / LM358.
+- Not yet in the v0.1 schematic: update it when we next touch the generator (`scripts/build_dualdelay.py`, line() TIME block and the LFO output).
