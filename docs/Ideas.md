@@ -127,3 +127,11 @@ The **1N914 in the 78L05 ground leg** that runs the PT2399 at ~5.6–5.7 V for "
 - #2 could be a **voicing pair**: line 1 bright (Small Time values), line 2 dark (Dragonfish values). With TWIST, crisp echoes against tape-like ones. The extra filtering also helps the two-chip **clock-whistle** risk.
 - #3: U6 (LFO) → TL062 / LM358.
 - Not yet in the v0.1 schematic: update it when we next touch the generator (`scripts/build_dualdelay.py`, line() TIME block and the LFO output).
+
+
+## Ideas from Stompboxology / Stomp Box Cookbook (2026-10-25)
+
+Full notes and sources: `../../Stompboxology Ideas.md` (index + deep dives). Ideas only (the books' circuits are for personal use).
+
+- **Ducking:** Envelo-Matic III inverted: the guitar's envelope turns the repeats down while playing, they swell back in the gaps (an LED / LDR or OTA on the wet sum, driven by an envelope detector on DRY).
+- **Stereo swap per note** (Attack-O-Matic V) / pan with invert (Pan Tremolo-Matic) for the stereo-out version.
