@@ -139,3 +139,27 @@ Full notes and sources: `../../Stompboxology Ideas.md` (index + deep dives). Ide
 ## v0.2 (2026-10-25)
 
 Applied the Dragonfish items: TIME minimum 2k7 on both lines, LFO into TMIN_2 via 33k + 10µ (even depth across TIME), U6 → LM358. Voicing pair left as a breadboard experiment. Bring-up order and tests: `Breadboard Plan.md`.
+
+## v1.0 (2026-10-25): SMD board, to be ordered as a prototype with Loop Echo
+
+Decided with the user: skip the breadboard (the blocks are Loop Echo's, the PT2399 is SMD-only, and clock whistle is a layout question a breadboard can't answer), order together with Loop Echo (option 1), three jacks.
+
+- **Generator:** `scripts/build_dualdelay.py` (v0.2 kept as `build_dualdelay_v0.2.py`). A0 sheet. ERC 0.
+- **Changes from v0.2:**
+  - Footprints + LCSC. All JLC basic except the two PT2399-SN (C126407). Electrolytics → MLCC (bulk 2 × 22µ, REF / VB 47µ 1206, couplings 10µ 0805); 1N4148W limiters; SS14; 220p = C107145 (X7R, the basic 0805 220p).
+  - **One AMS1117-5.0 per PT2399** (U7 → U1, U8 → U2), each with its own 10µ in / 10µ + 100n out, placed next to its chip at opposite ends of the board (~50 mm apart): the first line of defence against the clock whistle.
+  - **FB MAX 1 / 2 trims** (10k, Bourns 3296W, front side): a rheostat between each line's output (W1 / W2) and the top of its FB pot. 0 Ω = full feedback as v0.2; turn up to lower the maximum repeat level if the limiter isn't enough.
+  - RATE (1M) and DEPTH (100k) trims are 3296W too.
+- **Board:** `scripts/buildpcb_dualdelay.py` → `scripts/pcb_fields.py` → `_tools/autoroute.py "Dual Delay" --passes 300 --edge-margin 0.55`. Same 1590BB landscape geometry as Loop Echo v1.0 (100 × 83.5 mm, lid-boss cut-outs, centre footswitch notch, J1 vertical beside it).
+- **Panel (outside view, mm from the face centre):**
+
+  | Part | X | Y | Hole |
+  |---|---|---|---|
+  | TIME 1 · TIME 2 · MIX | −32 · 0 · +32 | +15 | 7.5 |
+  | FB 1 · TWIST (dual) · FB 2 | −32 · 0 · +32 | −1 | 7.5 |
+  | SERIES toggle (Taiway 100, slotted pads) | −32 | −21 | 6.5 |
+  | Status LED | 0 | −15 | 3.2 |
+  | Footswitch (3PDT + SwitchPCB v2) | 0 | −26 | 12.2 |
+
+- **Top wall (outside, left → right):** OUT (X −30) · DC (0) · IN (+30). PJ-646F and A-4118 jacks, as Loop Echo.
+- **If it whistles:** first try a 10 Ω + 10µ RC in each PT2399's 5 V feed (cut the track at the regulator output), then a separate ground return per chip. Note on the board which PT2399 is which (U1 = line 1, right side seen from inside).

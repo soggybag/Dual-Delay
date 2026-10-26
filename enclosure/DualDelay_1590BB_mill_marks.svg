@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="119.5mm" height="94.0mm" viewBox="0 0 119.5 94.0">
+<circle id="TIME_1" cx="27.750" cy="32.000" r="3.750" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="TIME_1_centre" cx="27.750" cy="32.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="TIME_2" cx="59.750" cy="32.000" r="3.750" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="TIME_2_centre" cx="59.750" cy="32.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="MIX" cx="91.750" cy="32.000" r="3.750" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="MIX_centre" cx="91.750" cy="32.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="FB_1" cx="27.750" cy="48.000" r="3.750" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="FB_1_centre" cx="27.750" cy="48.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="TWIST" cx="59.750" cy="48.000" r="3.750" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="TWIST_centre" cx="59.750" cy="48.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="FB_2" cx="91.750" cy="48.000" r="3.750" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="FB_2_centre" cx="91.750" cy="48.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="LED" cx="59.750" cy="62.000" r="1.600" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="LED_centre" cx="59.750" cy="62.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="SERIES_toggle" cx="27.750" cy="68.000" r="3.250" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="SERIES_toggle_centre" cx="27.750" cy="68.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="Footswitch" cx="59.750" cy="73.000" r="6.100" fill="none" stroke="#000" stroke-width="0.1"/>
+<circle id="Footswitch_centre" cx="59.750" cy="73.000" r="0.5" fill="none" stroke="#000" stroke-width="0.1"/>
+</svg>
