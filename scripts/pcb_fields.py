@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, __file__.rsplit('/', 1)[0])
 from sx import parse, dump, find, find1, Sym
 NET, PCB = sys.argv[1:3]
-SOLID = {('J1', '4'), ('U3', '4')}   # GND pads on a small enclosed B.Cu island or with one F.Cu spoke: solid, not thermal
+SOLID = {('J1', '4'), ('U3', '4'), ('C32', '2')}   # GND pads on a small enclosed B.Cu island or with one F.Cu spoke: solid, not thermal
 t = parse(open(NET).read())
 want = {}
 libid = {}
